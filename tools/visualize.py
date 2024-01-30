@@ -17,9 +17,11 @@ from mmdet3d.core.utils import visualize_camera, visualize_lidar, visualize_map
 from mmdet3d.datasets import build_dataloader, build_dataset
 from mmdet3d.models import build_model
 
-
+# eval() 函数用于执行一个字符串表达式，比如 eval("1+2")将会返回 3.
+# 下面的 recursive_eval() 函数就是实现一个迭代执行字符串表达式的功能。
 def recursive_eval(obj, globals=None):
     if globals is None:
+        # 深拷贝是完整复制一个数据，改变复制的数据的值不会影响原数据
         globals = copy.deepcopy(obj)
 
     if isinstance(obj, dict):

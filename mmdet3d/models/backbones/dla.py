@@ -11,7 +11,7 @@ from mmdet.models.builder import BACKBONES
 from mmcv.runner import BaseModule
 from mmcv.cnn import ConvModule
 
-__all__ = ["DLA"]
+__all__ = ["DLA"]#把名字为 DLA 的类暴露到模块外
 
 class BasicBlock(nn.Module):
     def __init__(
@@ -20,6 +20,28 @@ class BasicBlock(nn.Module):
         act_cfg=None
     ):
         super(BasicBlock, self).__init__()
+        # layer one: conv1
+        # inplanes：输入通道数。它表示输入特征图的通道数。
+
+        # planes：输出通道数。它表示卷积操作后输出特征图的通道数。
+
+        # kernel_size：卷积核大小。指定卷积核的高度和宽度。
+
+        # stride：卷积步幅。指定卷积操作在水平和垂直方向上的步幅大小。
+
+        # padding：填充大小。指定在输入特征图周围添加零填充的大小。通常用于控制输出特征图的尺寸。
+
+        # bias：一个布尔值，表示是否在卷积中包含偏置项。如果 norm_cfg 为 None，则偏置项会被包含，否则不包含。
+
+        # dilation：卷积扩展率。指定卷积核内元素之间的间隔。用于增加感受野大小。
+
+        # conv_cfg：卷积配置。可能包含卷积的类型、参数等配置信息。
+
+        # norm_cfg：规范化配置。可能包含规范化的类型、参数等配置信息。
+
+        # act_cfg：激活函数配置。可能包含激活函数的类型、参数等配置信息。
+
+
         self.conv1 = ConvModule(
             inplanes,
             planes,
@@ -32,7 +54,7 @@ class BasicBlock(nn.Module):
             norm_cfg=norm_cfg,
             act_cfg=act_cfg
         )
-
+        # layer two: conv2
         self.conv2 = ConvModule(
             planes,
             planes,
@@ -51,11 +73,13 @@ class BasicBlock(nn.Module):
         if residual is None:
             residual = x
 
-        out = self.conv1(x)
-        out = F.relu_(out)
+        out = self.conv1(x) # 输入张量前向传播
+        out = F.relu_(out) 
 
-        out = self.conv2(out)
+        out = self.conv2(out) # 张量进入 conv2
 
+        # 为什么残差要有 residual 这个参数？因为残差连接传递过去的tensor可能与conv2出来的维度不一样，可能需要转换
+        # 但是此例中不需要这个操作
         out = out + residual
         out = F.relu_(out)
 
@@ -63,7 +87,7 @@ class BasicBlock(nn.Module):
 
 
 class Bottleneck(nn.Module):
-    expansion = 2
+    expansion = 2 # 这样定义了一个类属性，访问它就是用 Bottleneck.expansion
 
     def __init__(
         self, inplanes, planes, stride=1, dilation=1,
@@ -71,8 +95,9 @@ class Bottleneck(nn.Module):
         act_cfg=None
     ):
         super(Bottleneck, self).__init__()
-        expansion = Bottleneck.expansion
+        expansion = Bottleneck.expansion #把类属性赋值给本地变量 expansion
         bottle_planes = planes // expansion
+        # layer 1: conv1
         self.conv1 = ConvModule(
             inplanes, 
             bottle_planes, 
@@ -82,6 +107,7 @@ class Bottleneck(nn.Module):
             norm_cfg=norm_cfg,
             act_cfg=act_cfg
         )
+        # layer 2: conv2
         self.conv2 = ConvModule(
             bottle_planes,
             bottle_planes,
@@ -94,6 +120,7 @@ class Bottleneck(nn.Module):
             norm_cfg=norm_cfg,
             act_cfg=act_cfg
         )
+        # layer 3: conv3
         self.conv3 = ConvModule(
             bottle_planes, 
             planes, 
@@ -104,7 +131,7 @@ class Bottleneck(nn.Module):
             act_cfg=act_cfg
         )
         self.stride = stride
-
+    # 前向传播
     def forward(self, x, residual=None):
         if residual is None:
             residual = x
@@ -142,6 +169,14 @@ class Root(nn.Module):
             act_cfg=act_cfg
         )
         self.residual = residual
+
+    '''
+    在你提供的代码中，`*x` 表示一个可变长度的参数列表，也就是说这个函数可以接受任意数量的参数。在函数内部，`x` 将被视为一个元组，其中包含了传递给函数的所有参数。这种语法允许你在不知道函数会接受多少个参数的情况下灵活地定义函数。
+
+    具体来说，这段代码中的 `forward` 方法接受任意数量的输入参数，并将它们存储在 `children` 变量中。然后，它使用 `torch.cat(x, 1)` 将输入参数 `x` 在维度1上拼接起来，这通常用于将多个输入特征图连接在一起。
+
+    这种方式的设计通常用于深度学习中，特别是在处理具有不同分支或多个输入的模型时，可以通过 `*args` 或 `*kwargs` 这样的参数形式来接受不定数量的输入。这种方式可以增加函数的灵活性和通用性。
+    '''
 
     def forward(self, *x):
         children = x

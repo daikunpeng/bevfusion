@@ -39,6 +39,7 @@ def make_cuda_ext(
 
 
 if __name__ == "__main__":
+    # 对整个代码进行初始化设置
     setup(
         name="mmdet3d",
         packages=find_packages(),
@@ -53,6 +54,7 @@ if __name__ == "__main__":
             "Programming Language :: Python :: 3.7",
         ],
         license="Apache License 2.0",
+        # ext 的含义是扩展模块？我现在的理解为使用cpp和cuda编写的utils函数
         ext_modules=[
             make_cuda_ext(
                 name="sparse_conv_ext",

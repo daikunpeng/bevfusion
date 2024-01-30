@@ -18,7 +18,7 @@ from mmdet3d.utils import get_root_logger, convert_sync_batchnorm, recursive_eva
 
 
 def main():
-    dist.init()
+    dist.init() # 分布式训练环境的初始化
 
     parser = argparse.ArgumentParser()
     parser.add_argument("config", metavar="FILE", help="config file")
@@ -28,7 +28,7 @@ def main():
     configs.load(args.config, recursive=True)
     configs.update(opts)
 
-    cfg = Config(recursive_eval(configs), filename=args.config)
+    cfg = Config(recursive_eval(configs), filename=args.config) # 构建一个cfg对象
 
     torch.backends.cudnn.benchmark = cfg.cudnn_benchmark
     torch.cuda.set_device(dist.local_rank())
@@ -63,9 +63,9 @@ def main():
             torch.backends.cudnn.deterministic = True
             torch.backends.cudnn.benchmark = False
 
-    datasets = [build_dataset(cfg.data.train)]
+    datasets = [build_dataset(cfg.data.train)] # mmdet3d 的成熟接口，可能只需要配置文件就能够自动化构建训练集
 
-    model = build_model(cfg.model)
+    model = build_model(cfg.model)# 根据配置文件直接构建网络模型
     model.init_weights()
     if cfg.get("sync_bn", None):
         if not isinstance(cfg["sync_bn"], dict):
